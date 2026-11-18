@@ -6,10 +6,10 @@ use std::time::Instant;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, default_value = "/dev/dri/card0")]
+    #[arg(short, long, default_value = "/dev/dri/card1")]
     device: String,
 
-    #[arg(short, long, default_value_t = 100)]
+    #[arg(short, long, default_value_t = 20)]
     count: usize,
 }
 
@@ -30,7 +30,6 @@ pub union DrmVblankUnion {
     pub reply: DrmVblankReply,
 }
 
-// Manual Debug implementation for the union
 impl std::fmt::Debug for DrmVblankUnion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("DrmVblankUnion").finish()
@@ -61,13 +60,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut last_instant = Instant::now();
 
     for i in 0..args.count {
+        // DRM_VBLANK_RELATIVE = 1, request = 1 (wait for next vblank interval)
         let mut vbl = DrmVblank {
-            type_: 1, // 1 = relative sequence
+            type_: 1,
             flags: 0,
-            union_: DrmVblankUnion { request: 1 }, // wait for 1 vblank ahead
+            union_: DrmVblankUnion { request: 1 },
         };
 
-        let start_wait = Instant::now();
+        let _start_wait = Instant::now();
         unsafe {
             if let Err(e) = drm_wait_vblank(fd, &mut vbl) {
                 eprintln!("[-] DRM ioctl DRM_IOCTL_WAIT_VBLANK failed: {}", e);
@@ -75,7 +75,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-        let _elapsed = start_wait.elapsed();
         let reply = unsafe { vbl.union_.reply };
         let timestamp_sec = reply.t_sec as f64 + (reply.t_usec as f64 / 1_000_000.0);
         let delta_ms = last_instant.elapsed().as_secs_f64() * 1000.0;

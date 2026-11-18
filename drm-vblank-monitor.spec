@@ -1,32 +1,44 @@
 Name:           drm-vblank-monitor
 Version:        0.1.0
 Release:        1%{?dist}
-Summary:        High-performance Rust DRM VBLANK monitor and frame timing tool
+Summary:        DRM vblank monitoring tool
 
-License:        GPL-3.0-or-later
+License:        MIT
 URL:            https://github.com/SimoesCTT/drm-vblank-monitor
-Source0:        v%{version}.tar.gz
+Source0:        %{url}/archive/v%{version}/drm-vblank-monitor-%{version}.tar.gz
 
-BuildRequires:  cargo
-BuildRequires:  rustc
+BuildRequires:  cargo >= 1.70
+BuildRequires:  rustc >= 1.70
+BuildRequires:  libdrm-devel
 
 %description
-A lightweight, zero-overhead diagnostic tool utilizing direct DRM ioctls 
-to monitor vertical blanking intervals, frame jitter, and page-flip timings on Linux.
+DRM vblank monitoring tool for Linux systems.
 
 %prep
-%autosetup -n %{name}-%{version}
+%autosetup -n drm-vblank-monitor-%{version} -p1
+
+# Setup cargo config for vendored dependencies
+mkdir -p .cargo
+cat > .cargo/config.toml << 'CONFIG'
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "vendor"
+CONFIG
 
 %build
-cargo build --release
+cargo build --release --offline
 
 %install
-mkdir -p %{buildroot}%{_bindir}
-install -p -m 0755 target/release/drm-vblank-monitor %{buildroot}%{_bindir}/drm-vblank-monitor
+install -d %{buildroot}%{_bindir}
+install -m 0755 target/release/drm-vblank-monitor %{buildroot}%{_bindir}/drm-vblank-monitor
 
 %files
 %{_bindir}/drm-vblank-monitor
+%license LICENSE
+%doc README.md
 
 %changelog
 * Wed Nov 18 2026 Americo Simoes <amexsimoes@gmail.com> - 0.1.0-1
-- Initial release v0.1.0 for Fedora Copr
+- Initial package with vendored dependencies
