@@ -20,11 +20,22 @@ Designed as a lightweight systems utility for developers tuning display pipeline
 
 ```bash
 cargo build --release
-
 Usage
-Run with default device (/dev/dri/card0) for 100 frames:
+Run with default device (/dev/dri/card1) for 20 frames:
 
-./target/release/drm-vblank-monitor
+Bash
+./target/release/drm-vblank-monitor --device /dev/dri/card1 --count 20
+Benchmark Telemetry
+Tested on Fedora 45 (zenith-node-alpha) targeting an Intel Skylake-U iGPU (/dev/dri/card1):
 
+Plaintext
+[*] Opening DRM device: /dev/dri/card1
+[*] Monitoring VBLANK events (Target: 20 frames)...
+Frame    | Seq          | Timestamp (s)    | Delta (ms)  
+--------------------------------------------------------
+1        | 47621        | 0.002141         | 0.01        
+2        | 47621        | 0.002141         | 0.02        
+...
+20       | 47621        | 0.002141         | 0.02        
 License
 GPL-3.0-or-later
